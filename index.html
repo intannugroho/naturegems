@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nature Gems Indonesia</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <aside class="desktop-sidebar" id="desktopSidebar">
+      <div class="brand">
+        <div class="gem"></div>
+        <div>
+          <h1>NATURE<br>GEMS</h1>
+          <p>Discover hidden wonders</p>
+        </div>
+      </div>
+
+      <nav class="side-nav">
+        <button class="active" data-screen="home" onclick="showScreen('home')"><i data-lucide="home"></i> Home</button>
+        <button data-screen="explore" onclick="showScreen('explore')"><i data-lucide="compass"></i> Explore</button>
+        <button data-screen="saved" onclick="showScreen('saved')"><i data-lucide="bookmark"></i> Saved</button>
+        <button data-screen="profile" onclick="showScreen('profile')"><i data-lucide="user"></i> Profile</button>
+      </nav>
+
+      <button class="gps-card" onclick="useGPS()">
+        <i data-lucide="crosshair"></i>
+        <span>Gunakan GPS</span>
+        <small id="sidebarLocation">Deteksi lokasi otomatis</small>
+      </button>
+    </aside>
+
+    <main class="main-panel">
+      <!-- SPLASH -->
+      <section class="screen active splash-screen" id="splash">
+        <div class="splash-glow"></div>
+        <div class="splash-content">
+          <div class="gem big"></div>
+          <h1><span>NATURE</span><span>GEMS</span></h1>
+          <p>DISCOVER HIDDEN WONDERS</p>
+          <div class="dots"><span></span><span></span><span></span></div>
+          <button class="primary-btn splash-btn" onclick="goAuthStart()">Mulai</button>
+        </div>
+      </section>
+
+      <!-- LOGIN -->
+      <section class="screen auth-screen" id="login">
+        <div class="auth-wrap">
+          <div class="auth-brand">
+            <div class="gem"></div>
+            <div>
+              <h1>NATURE GEMS</h1>
+              <p>Masuk untuk melanjutkan petualanganmu.</p>
+            </div>
+          </div>
+
+          <form class="auth-card" onsubmit="loginUser(event)">
+            <h2>Selamat Datang Kembali</h2>
+            <p class="muted">Gunakan akun yang sudah kamu daftarkan.</p>
+
+            <label>Email</label>
+            <div class="input-box">
+              <i data-lucide="mail"></i>
+              <input id="loginEmail" type="email" placeholder="email@example.com" required />
+            </div>
+
+            <label>Password</label>
+            <div class="input-box">
+              <i data-lucide="lock"></i>
+              <input id="loginPassword" type="password" placeholder="Masukkan password" required />
+            </div>
+
+            <button class="primary-btn full" type="submit">Masuk</button>
+            <p class="auth-switch">Belum punya akun? <button type="button" onclick="showScreen('register')">Daftar sekarang</button></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- REGISTER -->
+      <section class="screen auth-screen" id="register">
+        <div class="auth-wrap">
+          <div class="auth-brand">
+            <div class="gem"></div>
+            <div>
+              <h1>NATURE GEMS</h1>
+              <p>Buat akun baru untuk menyimpan data profile.</p>
+            </div>
+          </div>
+
+          <form class="auth-card" onsubmit="registerUser(event)">
+            <h2>Buat Akun Baru</h2>
+            <p class="muted">Data nama, email, dan preferensi akan tampil di profile.</p>
+
+            <label>Nama lengkap</label>
+            <div class="input-box">
+              <i data-lucide="user"></i>
+              <input id="regName" type="text" placeholder="Masukkan nama lengkap" required />
+            </div>
+
+            <label>Email</label>
+            <div class="input-box">
+              <i data-lucide="mail"></i>
+              <input id="regEmail" type="email" placeholder="email@example.com" required />
+            </div>
+
+            <label>Password</label>
+            <div class="input-box">
+              <i data-lucide="lock"></i>
+              <input id="regPassword" type="password" placeholder="Minimal 6 karakter" minlength="6" required />
+            </div>
+
+            <label>Domisili / Provinsi Favorit</label>
+            <div class="input-box select-input">
+              <i data-lucide="map-pin"></i>
+              <select id="regProvince"></select>
+            </div>
+
+            <button class="primary-btn full" type="submit">Daftar</button>
+            <p class="auth-switch">Sudah punya akun? <button type="button" onclick="showScreen('login')">Masuk</button></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- HOME -->
+      <section class="screen app-screen" id="home">
+        <header class="topbar">
+          <button class="location-pill" onclick="useGPS()">
+            <i data-lucide="map-pin"></i>
+            <span id="currentLocationText">Gunakan GPS</span>
+          </button>
+          <button class="avatar-btn" onclick="showScreen('profile')" id="topAvatar">I</button>
+        </header>
+
+        <div class="hero">
+          <div>
+            <p class="eyebrow">Indonesia Hidden Gems</p>
+            <h2>Destinasi di Sekitarmu</h2>
+            <p id="homeSubtitle">Pilih provinsi atau gunakan GPS untuk mencari destinasi terdekat.</p>
+          </div>
+          <button class="primary-btn hero-btn" onclick="useGPS()"><i data-lucide="crosshair"></i> Gunakan GPS</button>
+        </div>
+
+        <div class="controls">
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input id="homeSearch" type="search" placeholder="Cari destinasi, provinsi, tag..." oninput="renderDestinations()" />
+          </div>
+          <select id="provinceSelect" onchange="renderDestinations()"></select>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <h3>Rekomendasi Destinasi</h3>
+            <p id="resultCount">0 destinasi ditemukan</p>
+          </div>
+          <button class="text-btn" onclick="showScreen('explore')">Lihat Semua</button>
+        </div>
+
+        <div class="destination-grid" id="homeList"></div>
+      </section>
+
+      <!-- EXPLORE -->
+      <section class="screen app-screen" id="explore">
+        <header class="topbar">
+          <button class="back-mobile" onclick="showScreen('home')"><i data-lucide="arrow-left"></i></button>
+          <div>
+            <h2 class="page-title">Jelajahi Destinasi</h2>
+            <p class="page-subtitle">38 provinsi, 190 destinasi, semua kartu pakai foto realpict online.</p>
+          </div>
+          <button class="avatar-btn" onclick="showScreen('profile')" id="exploreAvatar">I</button>
+        </header>
+
+        <div class="controls sticky-controls">
+          <div class="search-box">
+            <i data-lucide="search"></i>
+            <input id="exploreSearch" type="search" placeholder="Cari destinasi atau provinsi..." oninput="renderExplore()" />
+          </div>
+          <select id="exploreProvinceSelect" onchange="renderExplore()"></select>
+        </div>
+
+        <div class="province-summary" id="provinceSummary"></div>
+        <div class="destination-grid" id="exploreList"></div>
+      </section>
+
+      <!-- DETAIL -->
+      <section class="screen detail-screen" id="detail">
+        <button class="floating-back" onclick="backToPrevious()"><i data-lucide="arrow-left"></i></button>
+        <div class="detail-hero" id="detailHero"></div>
+        <div class="detail-body">
+          <p class="eyebrow" id="detailProvince"></p>
+          <h2 id="detailName"></h2>
+          <p class="coordinate" id="detailCoordinate"></p>
+          <div class="tags" id="detailTags"></div>
+          <p class="detail-desc" id="detailDescription"></p>
+
+          <div class="detail-actions">
+            <button class="primary-btn" onclick="navigateSelected()"><i data-lucide="navigation"></i> Navigasi Only ke Google Maps</button>
+            <button class="secondary-btn" onclick="toggleSelectedSaved()"><i data-lucide="bookmark"></i> Simpan Destinasi</button>
+          </div>
+
+          <div class="info-card">
+            <h3>Informasi</h3>
+            <div class="info-row"><span>Keramaian</span><strong id="detailCrowd"></strong></div>
+            <div class="info-row"><span>Koordinat</span><strong id="detailLatLng"></strong></div>
+            <div class="info-row"><span>Aksi navigasi</span><strong>Terhubung ke Google Maps</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SAVED -->
+      <section class="screen app-screen" id="saved">
+        <header class="topbar">
+          <button class="back-mobile" onclick="showScreen('home')"><i data-lucide="arrow-left"></i></button>
+          <div>
+            <h2 class="page-title">Destinasi Tersimpan</h2>
+            <p class="page-subtitle" id="savedSubtitle">0 destinasi</p>
+          </div>
+          <button class="avatar-btn" onclick="showScreen('profile')" id="savedAvatar">I</button>
+        </header>
+
+        <div class="destination-grid" id="savedList"></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="screen app-screen" id="profile">
+        <header class="topbar">
+          <button class="back-mobile" onclick="showScreen('home')"><i data-lucide="arrow-left"></i></button>
+          <div>
+            <h2 class="page-title">Profile</h2>
+            <p class="page-subtitle">Kelola akun, keamanan, notifikasi, dan riwayat lokasi.</p>
+          </div>
+        </header>
+
+        <div class="profile-layout">
+          <div>
+            <div class="profile-card">
+              <div class="profile-avatar" id="profileAvatar">I</div>
+              <h2 id="profileName">intan</h2>
+              <p id="profileEmail">email@example.com</p>
+              <small id="profileProvince">Domisili: -</small>
+
+              <div class="profile-stats">
+                <div><strong id="savedTotal">0</strong><span>Disimpan</span></div>
+                <div><strong>38</strong><span>Provinsi</span></div>
+                <div><strong>190</strong><span>Destinasi</span></div>
+              </div>
+            </div>
+
+            <div class="menu-list">
+              <button onclick="openProfilePanel('settings')"><span><i data-lucide="settings"></i>Pengaturan</span><i data-lucide="chevron-right"></i></button>
+              <button onclick="openProfilePanel('notifications')"><span><i data-lucide="bell"></i>Notifikasi</span><i data-lucide="chevron-right"></i></button>
+              <button onclick="openProfilePanel('privacy')"><span><i data-lucide="shield-check"></i>Privasi dan Keamanan</span><i data-lucide="chevron-right"></i></button>
+              <button onclick="openProfilePanel('history')"><span><i data-lucide="map"></i>Riwayat Lokasi</span><i data-lucide="chevron-right"></i></button>
+              <button onclick="logout()"><span><i data-lucide="log-out"></i>Keluar</span><i data-lucide="chevron-right"></i></button>
+            </div>
+          </div>
+
+          <div class="profile-panel" id="profilePanel">
+            <div class="panel-empty">
+              <i data-lucide="mouse-pointer-click"></i>
+              <h3>Pilih menu profile</h3>
+              <p>Klik Pengaturan, Notifikasi, Privasi dan Keamanan, atau Riwayat Lokasi untuk mengubah fiturnya.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="active" data-screen="home" onclick="showScreen('home')"><i data-lucide="home"></i><span>Home</span></button>
+      <button data-screen="explore" onclick="showScreen('explore')"><i data-lucide="compass"></i><span>Explore</span></button>
+      <button data-screen="saved" onclick="showScreen('saved')"><i data-lucide="bookmark"></i><span>Saved</span></button>
+      <button data-screen="profile" onclick="showScreen('profile')"><i data-lucide="user"></i><span>Profile</span></button>
+    </nav>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
