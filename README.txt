@@ -32,3 +32,21 @@ CATATAN FOTO:
 CATATAN GPS:
 - GPS sebaiknya dibuka memakai Live Server/localhost.
 - Browser akan meminta izin lokasi. Klik Allow/Izinkan.
+
+
+UPDATE FITUR TAMBAHAN:
+1. Mode Offline: aktif/nonaktif, unduh paket offline, simpan destinasi dan kontak darurat ke localStorage.
+2. Kontak Darurat: Polsek Bandung, Puskesmas Bandung, Basarnas Bandung, Damkar Bandung. Nomor bisa diklik dari HP memakai link tel:.
+3. Laporkan Kondisi Jalan: tombol di detail destinasi dengan pilihan Aman, Rusak, Ditutup. Laporan tersimpan di localStorage browser.
+
+
+UPDATE KONTAK DARURAT SESUAI DESTINASI:
+- Kontak darurat sekarang mengikuti destinasi tujuan yang dipilih.
+- Saat membuka Detail destinasi atau klik Navigasi, destinasi tersebut otomatis menjadi tujuan darurat.
+- Di halaman Mode Offline ada dropdown Destinasi Tujuan.
+- Kontak menyesuaikan nama destinasi dan provinsi tujuan:
+  1. Polisi terdekat
+  2. Fasilitas kesehatan / ambulans
+  3. SAR / Basarnas wilayah
+  4. Damkar wilayah
+- Nomor kontak memakai nomor darurat nasional sebagai template demo: 110, 119, 115, 113.

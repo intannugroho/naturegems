@@ -3,10 +3,14 @@ const PROVINCES = [...new Set(DESTINATIONS.map(item => item.province))];
 let currentScreen = "splash";
 let previousScreen = "home";
 let selectedDestination = DESTINATIONS[0];
+let targetDestinationId = Number(localStorage.getItem("natureGemsTargetDestinationId") || DESTINATIONS[0].id);
 let userLocation = JSON.parse(localStorage.getItem("natureGemsUserLocation") || "null");
 let locationHistory = JSON.parse(localStorage.getItem("natureGemsLocationHistory") || "[]");
 let savedIds = JSON.parse(localStorage.getItem("natureGemsSavedIds") || "[]");
 let currentUser = JSON.parse(localStorage.getItem("natureGemsCurrentUser") || "null");
+let offlineMode = JSON.parse(localStorage.getItem("natureGemsOfflineMode") || "false");
+let offlinePack = JSON.parse(localStorage.getItem("natureGemsOfflinePack") || "null");
+let roadReports = JSON.parse(localStorage.getItem("natureGemsRoadReports") || "[]");
 let settings = JSON.parse(localStorage.getItem("natureGemsSettings") || JSON.stringify({
   theme: "dark",
   language: "id",
@@ -18,8 +22,68 @@ let settings = JSON.parse(localStorage.getItem("natureGemsSettings") || JSON.str
   locationPermission: true
 }));
 
+const NATIONAL_EMERGENCY_NUMBERS = {
+  police: "110",
+  medical: "119",
+  sar: "115",
+  fire: "113"
+};
+
+function getTargetDestination(){
+  return DESTINATIONS.find(item => item.id === Number(targetDestinationId)) || selectedDestination || DESTINATIONS[0];
+}
+
+function setTargetDestination(id, showMessage = false){
+  targetDestinationId = Number(id);
+  localStorage.setItem("natureGemsTargetDestinationId", String(targetDestinationId));
+
+  const select = document.getElementById("emergencyDestinationSelect");
+  if(select) select.value = String(targetDestinationId);
+
+  renderEmergencyContacts();
+  updateOfflineUI();
+
+  if(showMessage){
+    const target = getTargetDestination();
+    showToast(`Tujuan darurat diatur ke ${target.name}.`);
+  }
+}
+
+function generateEmergencyContacts(destination = getTargetDestination()){
+  const area = destination.province;
+  const place = destination.name;
+
+  return [
+    {
+      type: "Polisi Terdekat",
+      name: `Polsek / layanan polisi sekitar ${place}`,
+      phone: NATIONAL_EMERGENCY_NUMBERS.police,
+      note: `Gunakan untuk keamanan, kehilangan, kecelakaan, atau kondisi darurat di area ${area}.`
+    },
+    {
+      type: "Fasilitas Kesehatan",
+      name: `Puskesmas / RS terdekat dari ${place}`,
+      phone: NATIONAL_EMERGENCY_NUMBERS.medical,
+      note: `Gunakan untuk bantuan medis, ambulans, cedera, atau kondisi kesehatan darurat saat berada di ${place}.`
+    },
+    {
+      type: "SAR",
+      name: `Basarnas / SAR wilayah ${area}`,
+      phone: NATIONAL_EMERGENCY_NUMBERS.sar,
+      note: `Gunakan untuk kondisi tersesat, kecelakaan alam, pendakian, pantai, air terjun, dan evakuasi.`
+    },
+    {
+      type: "Damkar",
+      name: `Pemadam Kebakaran wilayah ${area}`,
+      phone: NATIONAL_EMERGENCY_NUMBERS.fire,
+      note: `Gunakan untuk kebakaran, penyelamatan, evakuasi hewan, atau keadaan darurat di sekitar destinasi.`
+    }
+  ];
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   fillProvinceSelects();
+  fillEmergencyDestinationSelect();
   applySettings();
   hydrateAuthFields();
   updateProfile();
@@ -34,6 +98,8 @@ document.addEventListener("DOMContentLoaded", () => {
   renderDestinations();
   renderExplore();
   renderSaved();
+  renderEmergencyContacts();
+  updateOfflineUI();
   refreshIcons();
 });
 
@@ -72,6 +138,7 @@ function showScreen(id){
   if(id === "explore") renderExplore();
   if(id === "saved") renderSaved();
   if(id === "profile") updateProfile();
+  if(id === "offline") { fillEmergencyDestinationSelect(); renderEmergencyContacts(); updateOfflineUI(); }
 
   window.scrollTo({top:0, behavior:"smooth"});
   refreshIcons();
@@ -276,6 +343,7 @@ function emptyTemplate(text){
 
 function openDetail(id){
   selectedDestination = DESTINATIONS.find(item => item.id === id) || DESTINATIONS[0];
+  setTargetDestination(id, false);
 
   document.getElementById("detailHero").style.backgroundImage = `url('${selectedDestination.image}')`;
   document.getElementById("detailProvince").textContent = selectedDestination.province;
@@ -296,6 +364,7 @@ function navigateSelected(){
 function navigateTo(id){
   const item = DESTINATIONS.find(dest => dest.id === id);
   if(!item) return;
+  setTargetDestination(id, false);
 
   const origin = userLocation ? `&origin=${userLocation.lat},${userLocation.lng}` : "";
   const url = `https://www.google.com/maps/dir/?api=1${origin}&destination=${item.lat},${item.lng}&travelmode=driving`;
@@ -418,7 +487,7 @@ function updateProfile(){
     initial: "I"
   };
 
-  ["topAvatar", "exploreAvatar", "savedAvatar", "profileAvatar"].forEach(id => {
+  ["topAvatar", "exploreAvatar", "savedAvatar", "offlineAvatar", "profileAvatar"].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.textContent = user.initial || getInitial(user.name);
   });
@@ -621,6 +690,110 @@ function clearAllUserData(){
   locationHistory = [];
   showToast("Semua data lokal sudah dihapus.");
   showScreen("register");
+}
+
+
+/* OFFLINE MODE & EMERGENCY CONTACTS */
+function toggleOfflineMode(){
+  offlineMode = !offlineMode;
+  localStorage.setItem("natureGemsOfflineMode", JSON.stringify(offlineMode));
+  updateOfflineUI();
+  showToast(offlineMode ? "Mode offline aktif." : "Mode offline nonaktif.");
+}
+function downloadOfflinePack(){
+  offlinePack = { downloadedAt: new Date().toLocaleString("id-ID"), destinations: DESTINATIONS.slice(0, 190), emergencyContacts: generateEmergencyContacts(getTargetDestination()),
+    targetDestination: getTargetDestination() };
+  offlineMode = true;
+  localStorage.setItem("natureGemsOfflinePack", JSON.stringify(offlinePack));
+  localStorage.setItem("natureGemsOfflineMode", JSON.stringify(offlineMode));
+  updateOfflineUI();
+  showToast("Peta, destinasi, dan kontak darurat tersimpan offline.");
+}
+function clearOfflinePack(){
+  offlinePack = null;
+  offlineMode = false;
+  localStorage.removeItem("natureGemsOfflinePack");
+  localStorage.setItem("natureGemsOfflineMode", JSON.stringify(false));
+  updateOfflineUI();
+  showToast("Data offline sudah dihapus.");
+}
+function updateOfflineUI(){
+  const switchEl = document.getElementById("offlineSwitch");
+  const statusEl = document.getElementById("offlineStatus");
+  if(switchEl) switchEl.classList.toggle("active", offlineMode);
+  if(statusEl){
+    if(offlinePack){
+      statusEl.textContent = `Paket offline aktif untuk ${getTargetDestination().name}. Terakhir diunduh: ${offlinePack.downloadedAt}. Total data: ${offlinePack.destinations.length} destinasi dan ${offlinePack.emergencyContacts.length} kontak darurat sesuai tujuan.`;
+    }else if(offlineMode){
+      statusEl.textContent = "Mode offline aktif, tetapi paket data belum diunduh. Klik Unduh Paket Offline.";
+    }else{
+      statusEl.textContent = "Aktifkan mode offline untuk menyimpan data darurat.";
+    }
+  }
+}
+function fillEmergencyDestinationSelect(){
+  const select = document.getElementById("emergencyDestinationSelect");
+  if(!select) return;
+
+  select.innerHTML = DESTINATIONS.map(item => `
+    <option value="${item.id}">${escapeHTML(item.province)} - ${escapeHTML(item.name)}</option>
+  `).join("");
+
+  select.value = String(targetDestinationId);
+}
+
+function changeEmergencyDestination(id){
+  setTargetDestination(id, true);
+}
+
+function openEmergencyForSelected(){
+  setTargetDestination(selectedDestination.id, false);
+  showScreen("offline");
+}
+
+function renderEmergencyContacts(){
+  const list = document.getElementById("emergencyList");
+  const count = document.getElementById("emergencyCount");
+  const info = document.getElementById("emergencyDestinationInfo");
+  if(!list) return;
+
+  const destination = getTargetDestination();
+  const contacts = generateEmergencyContacts(destination);
+
+  if(count) count.textContent = `${contacts.length} kontak untuk destinasi tujuan`;
+
+  if(info){
+    info.innerHTML = `
+      <strong>${escapeHTML(destination.name)}</strong>
+      <span>${escapeHTML(destination.province)} • ${destination.lat}, ${destination.lng}</span>
+    `;
+  }
+
+  list.innerHTML = contacts.map(contact => `
+    <div class="emergency-item">
+      <div class="contact-main">
+        <h4>${escapeHTML(contact.type)}</h4>
+        <p>${escapeHTML(contact.name)}</p>
+        <div class="contact-note">${escapeHTML(contact.note)}</div>
+      </div>
+      <div class="emergency-actions">
+        <a href="tel:${escapeHTML(contact.phone)}">${escapeHTML(contact.phone)}</a>
+        <button onclick="navigateTo(${destination.id})">Maps</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+/* ROAD CONDITION REPORT */
+function openRoadReport(){ document.getElementById("roadReportModal").classList.add("open"); }
+function closeRoadReport(){ document.getElementById("roadReportModal").classList.remove("open"); }
+function submitRoadReport(condition){
+  const report = { destinationId: selectedDestination.id, destinationName: selectedDestination.name, province: selectedDestination.province, condition, time: new Date().toLocaleString("id-ID"), lat: selectedDestination.lat, lng: selectedDestination.lng };
+  roadReports.unshift(report);
+  roadReports = roadReports.slice(0, 50);
+  localStorage.setItem("natureGemsRoadReports", JSON.stringify(roadReports));
+  closeRoadReport();
+  showToast(`Laporan jalan "${condition}" berhasil dikirim.`);
 }
 
 /* UTILS */

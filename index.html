@@ -22,6 +22,7 @@
         <button class="active" data-screen="home" onclick="showScreen('home')"><i data-lucide="home"></i> Home</button>
         <button data-screen="explore" onclick="showScreen('explore')"><i data-lucide="compass"></i> Explore</button>
         <button data-screen="saved" onclick="showScreen('saved')"><i data-lucide="bookmark"></i> Saved</button>
+        <button data-screen="offline" onclick="showScreen('offline')"><i data-lucide="download-cloud"></i> Offline</button>
         <button data-screen="profile" onclick="showScreen('profile')"><i data-lucide="user"></i> Profile</button>
       </nav>
 
@@ -198,6 +199,8 @@
           <div class="detail-actions">
             <button class="primary-btn" onclick="navigateSelected()"><i data-lucide="navigation"></i> Navigasi Only ke Google Maps</button>
             <button class="secondary-btn" onclick="toggleSelectedSaved()"><i data-lucide="bookmark"></i> Simpan Destinasi</button>
+            <button class="secondary-btn" onclick="openRoadReport()"><i data-lucide="triangle-alert"></i> Laporkan Kondisi Jalan</button>
+            <button class="secondary-btn" onclick="openEmergencyForSelected()"><i data-lucide="phone-call"></i> Kontak Darurat</button>
           </div>
 
           <div class="info-card">
@@ -221,6 +224,64 @@
         </header>
 
         <div class="destination-grid" id="savedList"></div>
+      </section>
+
+      <!-- OFFLINE MODE -->
+      <section class="screen app-screen" id="offline">
+        <header class="topbar">
+          <button class="back-mobile" onclick="showScreen('home')"><i data-lucide="arrow-left"></i></button>
+          <div>
+            <h2 class="page-title">Mode Offline</h2>
+            <p class="page-subtitle">Unduh data penting untuk akses saat sinyal terbatas.</p>
+          </div>
+          <button class="avatar-btn" onclick="showScreen('profile')" id="offlineAvatar">I</button>
+        </header>
+
+        <div class="offline-layout">
+          <section class="offline-card">
+            <div class="offline-top">
+              <div class="offline-title">
+                <div class="offline-icon"><i data-lucide="download-cloud"></i></div>
+                <div>
+                  <h3>Mode Offline</h3>
+                  <p>Unduh Peta & Kontak Darurat</p>
+                </div>
+              </div>
+              <button class="switch" id="offlineSwitch" onclick="toggleOfflineMode()"></button>
+            </div>
+
+            <div class="offline-map">
+              <div class="map-grid"></div>
+              <div class="map-pin pin-a"><i data-lucide="map-pin"></i></div>
+              <div class="map-pin pin-b"><i data-lucide="hospital"></i></div>
+              <div class="map-pin pin-c"><i data-lucide="shield-alert"></i></div>
+              <p id="offlineStatus">Aktifkan mode offline untuk menyimpan data darurat.</p>
+            </div>
+
+            <div class="offline-actions">
+              <button class="primary-btn" onclick="downloadOfflinePack()"><i data-lucide="download"></i> Unduh Paket Offline</button>
+              <button class="secondary-btn" onclick="clearOfflinePack()"><i data-lucide="trash-2"></i> Hapus Data Offline</button>
+            </div>
+          </section>
+
+          <section class="emergency-card">
+            <div class="section-head simple">
+              <div>
+                <h3>Kontak Darurat</h3>
+                <p id="emergencyCount">Kontak mengikuti destinasi tujuan</p>
+              </div>
+            </div>
+
+            <div class="destination-picker">
+              <label for="emergencyDestinationSelect">Destinasi tujuan</label>
+              <select id="emergencyDestinationSelect" onchange="changeEmergencyDestination(this.value)"></select>
+              <small>Kontak darurat akan menyesuaikan provinsi dan destinasi yang dipilih.</small>
+            </div>
+
+            <div class="emergency-destination" id="emergencyDestinationInfo"></div>
+            <div class="emergency-list" id="emergencyList"></div>
+          </section>
+        </div>
       </section>
 
       <!-- PROFILE -->
@@ -249,6 +310,7 @@
             </div>
 
             <div class="menu-list">
+              <button onclick="showScreen('offline')"><span><i data-lucide="download-cloud"></i>Mode Offline</span><i data-lucide="chevron-right"></i></button>
               <button onclick="openProfilePanel('settings')"><span><i data-lucide="settings"></i>Pengaturan</span><i data-lucide="chevron-right"></i></button>
               <button onclick="openProfilePanel('notifications')"><span><i data-lucide="bell"></i>Notifikasi</span><i data-lucide="chevron-right"></i></button>
               <button onclick="openProfilePanel('privacy')"><span><i data-lucide="shield-check"></i>Privasi dan Keamanan</span><i data-lucide="chevron-right"></i></button>
@@ -274,6 +336,30 @@
       <button data-screen="saved" onclick="showScreen('saved')"><i data-lucide="bookmark"></i><span>Saved</span></button>
       <button data-screen="profile" onclick="showScreen('profile')"><i data-lucide="user"></i><span>Profile</span></button>
     </nav>
+  </div>
+
+  <div class="report-modal" id="roadReportModal">
+    <div class="report-box">
+      <h2>Laporkan Kondisi Jalan</h2>
+      <p>Bantu traveler lain dengan melaporkan kondisi terkini</p>
+
+      <button class="report-option safe" onclick="submitRoadReport('Aman')">
+        <strong>✅ Aman</strong>
+        <span>Jalan dalam kondisi baik</span>
+      </button>
+
+      <button class="report-option broken" onclick="submitRoadReport('Rusak')">
+        <strong>⚠️ Rusak</strong>
+        <span>Jalan rusak, hati-hati</span>
+      </button>
+
+      <button class="report-option closed" onclick="submitRoadReport('Ditutup')">
+        <strong>🚫 Ditutup</strong>
+        <span>Akses ditutup sementara</span>
+      </button>
+
+      <button class="cancel-report" onclick="closeRoadReport()">Batal</button>
+    </div>
   </div>
 
   <div class="toast" id="toast"></div>
